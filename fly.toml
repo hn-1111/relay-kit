@@ -1,0 +1,38 @@
+# An example fly.toml for running the relay on Fly.io (the settings follow Fly's documentation; this file has not been
+# tried on a real Fly account by its author).
+#
+#   1. Put a name nobody else uses on the "app" line below, then create the app:
+#        fly apps create the-name-you-chose
+#   2. Give the relay its login (the relay refuses to start without it):
+#        fly secrets set SOCKS_USER=some-user-name SOCKS_PASS=a-long-random-password
+#   3. A raw TCP port needs an IPv4 address of its own (Fly charges a few dollars a month for it):
+#        fly ips allocate-v4
+#   4. Deploy ONE machine (without --ha=false Fly starts two):
+#        fly deploy --ha=false
+#   5. The address for RELAY_EXTERNAL_HOST in the .env of v.sh is the v4 address that  fly ips list  shows;
+#      RELAY_EXTERNAL_PORT is 1080 and RELAY_EXTERNAL_USER / RELAY_EXTERNAL_PASS are what you set in step 2.
+#      (Do not use the *.internal names of Fly: a Cloudflare Worker cannot reach them.)
+
+app = "CHANGE-THIS-TO-A-NAME-OF-YOUR-OWN"
+# Where the traffic of the relay comes out into the internet. List of regions:  fly platform regions
+primary_region = "fra"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  SOCKS_PORT = "1080"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 1080
+  auto_stop_machines = "off"
+  auto_start_machines = false
+
+  # no "handlers" line: Fly passes the TCP connection on as it is
+  [[services.ports]]
+    port = 1080
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
